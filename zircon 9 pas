@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>zircon</title>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+Thai:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --surface-subtle: #f4f4f5;
+      --text: #18181b;
+      --text-muted: #71717a;
+      --border: #e4e4e7;
+      --accent: #18181b;
+      --accent-hover: #27272a;
+      --danger: #dc2626;
+      --success: #15803d;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    header {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.04em;
+      color: var(--text);
+      text-decoration: none;
+      user-select: none;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface-subtle);
+      padding: 3px;
+      border-radius: 8px;
+    }
+
+    .nav-tab {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 400;
+      transition: all 0.15s ease;
+    }
+
+    .nav-tab.active {
+      background: var(--surface);
+      color: var(--text);
+      font-weight: 500;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .user-area {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .user-area img {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    .btn-ghost:hover {
+      color: var(--text);
+      border-color: #a1a1aa;
+    }
+
+    main {
+      max-width: 820px;
+      width: 100%;
+      margin: 40px auto;
+      padding: 0 20px 80px;
+      flex: 1;
+    }
+
+    .auth-box {
+      max-width: 390px;
+      margin: 56px auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 34px 28px;
+      text-align: center;
+    }
+
+    .auth-box h1 {
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+
+    .auth-box p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 22px;
+      font-weight: 300;
+    }
+
+    .google-btn {
+      width: 100%;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 16px;
+      font-size: 13.5px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .google-btn:hover {
+      background: var(--surface-subtle);
+      border-color: #d4d4d8;
+    }
+
+    .google-btn svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .auth-sub {
+      margin-top: 18px;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      font-weight: 300;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      gap: 8px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .tag {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      background: var(--surface-subtle);
+      padding: 3px 9px;
+      border-radius: 6px;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .input-field {
+      flex: 1;
+      min-width: 220px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .input-field:focus {
+      border-color: var(--text);
+    }
+
+    .input-field:disabled {
+      background: var(--surface-subtle);
+      color: var(--text-muted);
+      cursor: not-allowed;
+    }
+
+    .btn-dark {
+      background: var(--accent);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-dark:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .btn-dark:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .btn-cancel-order {
+      background: #ffffff;
+      color: var(--danger);
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    .btn-cancel-order:hover:not(:disabled) {
+      background: #fef2f2;
+      border-color: var(--danger);
+    }
+
+    .btn-cancel-order:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .timer-box {
+      text-align: center;
+      padding: 28px 16px;
+      background: var(--surface-subtle);
+      border-radius: 10px;
+    }
+
+    .timer-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 400;
+    }
+
+    .timer-digits {
+      font-size: clamp(36px, 6vw, 52px);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 20px;
+    }
+
+    .timer-actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-outline {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    .btn-outline:hover:not(:disabled) {
+      border-color: var(--text);
+    }
+
+    .btn-outline:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 11px 8px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-weight: 400;
+    }
+
+    th {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .note-cancelled {
+      color: var(--danger);
+      font-weight: 500;
+    }
+
+    .note-normal {
+      color: var(--text-muted);
+    }
+
+    .error-text {
+      color: var(--danger);
+      font-size: 12px;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(24, 24, 27, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+    }
+
+    .modal-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+
+    .modal-warning {
+      font-size: 13px;
+      color: var(--danger);
+      font-weight: 500;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .auth-tabs {
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      margin-bottom: 28px;
+      border-radius: 10px;
+      background: var(--surface-subtle);
+    }
+    .auth-tab {
+      flex: 1;
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 8px;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .auth-tab.active {
+      background: #fff;
+      color: var(--text);
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      font-weight: 600;
+    }
+    .auth-panel { display: none; text-align: left; }
+    .auth-panel.active { display: block; }
+    .auth-panel h1 { text-align: left; }
+    .auth-panel .auth-description {
+      text-align: left;
+      margin-bottom: 18px;
+    }
+    .auth-panel form { display: flex; flex-direction: column; gap: 12px; }
+    .auth-submit { width: 100%; margin-top: 2px; }
+    .forgot-trigger-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: -4px;
+    }
+    .forgot-link {
+      background: transparent;
+      border: 0;
+      color: var(--text-muted);
+      font-size: 12px;
+      cursor: pointer;
+      padding: 2px 0;
+      transition: color 0.15s;
+    }
+    .forgot-link:hover {
+      color: var(--text);
+      text-decoration: underline;
+    }
+    .forgot-box {
+      padding: 16px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .forgot-box-label {
+      font-size: 12px !important;
+      color: var(--text-muted) !important;
+      margin: 0 !important;
+      line-height: 1.5;
+    }
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-muted);
+      font-size: 12px;
+      margin: 18px 0;
+    }
+    .auth-divider::before, .auth-divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .password-hint {
+      margin: -4px 0 0 !important;
+      font-size: 11px !important;
+      line-height: 1.5;
+      text-align: left;
+    }
+    #authError { margin-top: 12px; }
+    .success-text { color: #15803d !important; }
+
+    .reset-inline-box {
+      max-width: 390px;
+      margin: 56px auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 32px 26px;
+      text-align: left;
+    }
+    .reset-inline-box h1 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .reset-inline-box .desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      font-weight: 300;
+    }
+    .reset-account-pill {
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 12.5px;
+      color: var(--text);
+      margin-bottom: 14px;
+      word-break: break-all;
+      display: none;
+    }
+    .reset-inline-box form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .reset-msg {
+      margin-top: 12px;
+      font-size: 12px;
+      display: none;
+      line-height: 1.5;
+    }
+    .reset-msg.error {
+      display: block;
+      color: var(--danger);
+    }
+    .reset-msg.success {
+      display: block;
+      color: var(--success);
+    }
+    .reset-back-btn {
+      margin-top: 16px;
+      background: transparent;
+      border: 0;
+      color: var(--text-muted);
+      font-size: 12.5px;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+    }
+    .reset-back-btn:hover {
+      color: var(--text);
+    }
+
+    @media (max-width: 480px) {
+      .auth-box, .reset-inline-box { margin: 28px 14px; padding: 24px 18px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="#" class="logo" onclick="returnToMainApp(event)">zircon</a>
+
+    <div id="navTabs" class="nav-tabs hidden">
+      <button class="nav-tab active" onclick="switchTab('rental')">เช่ารหัส</button>
+      <button class="nav-tab" onclick="switchTab('history')">รายการยืนยัน</button>
+    </div>
+
+    <div id="userArea" class="user-area hidden">
+      <img id="userAvatar" src="" alt="" />
+      <span id="userName"></span>
+      <button class="btn-ghost" onclick="logout()">ออกจากระบบ</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="resetPasswordSection" class="reset-inline-box hidden">
+      <h1>เปลี่ยนรหัสผ่าน</h1>
+      <p id="resetStatusDesc" class="desc">กำลังตรวจสอบลิงก์สำหรับเปลี่ยนรหัสผ่าน...</p>
+      <div id="resetAccountEmail" class="reset-account-pill mono"></div>
+
+      <form id="resetPasswordForm" onsubmit="handleConfirmResetPassword(event)" style="display:none;">
+        <input
+          type="password"
+          id="resetNewPassword"
+          class="input-field"
+          placeholder="รหัสผ่านใหม่"
+          autocomplete="new-password"
+          minlength="8"
+          required
+        />
+        <p class="password-hint">รหัสผ่านต้องมีตัวอักษรภาษาอังกฤษอย่างน้อย 1 ตัว และตัวเลขอย่างน้อย 1 ตัว รวมไม่น้อยกว่า 8 ตัว</p>
+        <input
+          type="password"
+          id="resetConfirmPassword"
+          class="input-field"
+          placeholder="ยืนยันรหัสผ่านใหม่อีกครั้ง"
+          autocomplete="new-password"
+          minlength="8"
+          required
+        />
+        <button type="submit" id="btnSubmitResetPassword" class="btn-dark">ยืนยันการเปลี่ยนรหัสผ่าน</button>
+      </form>
+
+      <p id="resetMessageBox" class="reset-msg" role="alert"></p>
+      <button type="button" class="reset-back-btn" onclick="returnToMainApp(event)">กลับไปหน้าเข้าสู่ระบบ</button>
+      <div class="auth-sub">ใช้งานระบบฟรีได้ตลอด</div>
+    </section>
+
+    <section id="authSection" class="auth-box">
+      <div id="authTabs" class="auth-tabs">
+        <button type="button" class="auth-tab active" id="loginTab" onclick="switchAuthTab('login')">เข้าสู่ระบบ</button>
+        <button type="button" class="auth-tab" id="registerTab" onclick="switchAuthTab('register')">สมัครสมาชิก</button>
+      </div>
+
+      <div id="loginPanel" class="auth-panel active">
+        <div id="loginFormContainer">
+          <h1>เข้าสู่ระบบ zircon</h1>
+          <p class="auth-description">เข้าสู่ระบบเพื่อใช้งานบริการ zircon</p>
+          <form onsubmit="loginWithEmail(event)">
+            <input type="email" id="loginEmail" class="input-field" placeholder="อีเมล" autocomplete="email" required />
+            <input type="password" id="loginPassword" class="input-field" placeholder="รหัสผ่าน" autocomplete="current-password" required />
+            <div class="forgot-trigger-row">
+              <button type="button" class="forgot-link" onclick="openForgotPasswordView()">ลืมรหัสผ่าน?</button>
+            </div>
+            <button type="submit" class="btn-dark auth-submit">เข้าสู่ระบบด้วยอีเมล</button>
+          </form>
+
+          <div class="auth-divider">หรือ</div>
+          <button type="button" class="google-btn" onclick="handleGoogleButtonClick()">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.8C6.2 7.2 8.9 5 12 5z"/>
+              <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.6l3.7 2.9c2.2-2 3.7-5 3.7-8.7z"/>
+              <path fill="#FBBC05" d="M5.3 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.6 7.4C.6 9.4 0 11.6 0 14s.6 4.6 1.6 6.6l3.7-2.8z"/>
+              <path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.8-2.1-6.7-5l-3.7 2.8C3.5 21.4 7.4 24 12 24z"/>
+            </svg>
+            เข้าสู่ระบบผ่าน Google
+          </button>
+        </div>
+
+        <div id="forgotPasswordBox" class="forgot-box hidden">
+          <h1>ลืมรหัสผ่าน</h1>
+          <p class="forgot-box-label">กรอกอีเมลเดียวกับที่ใช้สมัครสมาชิก ระบบจะส่งลิงก์สำหรับตั้งรหัสผ่านใหม่ไปยังอีเมลนั้น</p>
+          <input
+            type="email"
+            id="forgotEmailInput"
+            class="input-field"
+            placeholder="อีเมลเดียวกับที่ใช้สมัครสมาชิก"
+            autocomplete="email"
+          />
+          <div class="forgot-trigger-row">
+            <button type="button" class="forgot-link" onclick="backToLoginView()">ย้อนกลับ</button>
+          </div>
+          <button type="button" id="btnSendResetEmail" class="btn-dark auth-submit" onclick="sendResetPasswordEmail()">ส่งลิงก์รีเซ็ตรหัสผ่าน</button>
+        </div>
+      </div>
+
+      <div id="registerPanel" class="auth-panel">
+        <h1>สร้างบัญชีใหม่</h1>
+        <p class="auth-description">ตั้งชื่อบัญชี อีเมล และรหัสผ่านเพื่อเข้าใช้บริการ zircon</p>
+        <form onsubmit="registerWithEmail(event)">
+          <input type="text" id="registerName" class="input-field" placeholder="ตั้งชื่อบัญชี" autocomplete="username" maxlength="40" required />
+          <input type="email" id="registerEmail" class="input-field" placeholder="กรอกอีเมล" autocomplete="email" required />
+          <input type="password" id="registerPassword" class="input-field" placeholder="ตั้งรหัสผ่าน" autocomplete="new-password" minlength="8" required />
+          <p class="password-hint">รหัสผ่านต้องมีตัวอักษรภาษาอังกฤษอย่างน้อย 1 ตัว และตัวเลขอย่างน้อย 1 ตัว รวมไม่น้อยกว่า 8 ตัว</p>
+          <input type="password" id="confirmPassword" class="input-field" placeholder="ยืนยันรหัสผ่านอีกครั้ง" autocomplete="new-password" required />
+          <button type="submit" class="btn-dark auth-submit">สมัครสมาชิก</button>
+        </form>
+      </div>
+
+      <p id="authError" class="error-text" role="alert"></p>
+      <div class="auth-sub">ใช้งานระบบฟรีได้ตลอด</div>
+    </section>
+
+    <section id="appSection" class="hidden">
+      <div id="tab-rental">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">เลขออเดอร์ทำรายการ</span>
+          </div>
+
+          <div class="input-group">
+            <input
+              type="text"
+              id="orderInput"
+              class="input-field mono"
+              placeholder="กรอกเลขออเดอร์"
+            />
+            <button id="btnConfirmOrder" class="btn-dark" onclick="parseAndConfirmOrder()">ยืนยันรายการ</button>
+          </div>
+          <p id="orderError" class="error-text"></p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">เวลาคงเหลือ</span>
+            <span id="rentalBadge" class="tag">รอดำเนินการ</span>
+          </div>
+
+          <div class="timer-box">
+            <div id="timerStatusText" class="timer-label">ยืนยันเลขออเดอร์เพื่อเตรียมเริ่มนับเวลา</div>
+            <div id="timerClock" class="timer-digits mono">00:00:00</div>
+
+            <div class="timer-actions">
+              <button id="btnToggleTimer" class="btn-dark" onclick="toggleRentalTimer()" disabled>
+                เริ่มนับเวลา
+              </button>
+              <button id="btnCancelOrder" class="btn-cancel-order" onclick="openCancelModal()" disabled>
+                ยกเลิกรายการ
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-history" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">ประวัติรายการที่เช่า</span>
+            <span id="historyCount" class="tag">0 รายการ</span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>เลขออเดอร์</th>
+                  <th>รหัสที่เช่า</th>
+                  <th>ระยะเวลา</th>
+                  <th>ยืนยันเมื่อ</th>
+                  <th>หมายเหตุ</th>
+                </tr>
+              </thead>
+              <tbody id="historyTableBody">
+                <tr>
+                  <td colspan="5" style="text-align:center; color:var(--text-muted); padding:24px 0;">ยังไม่มีรายการ</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="cancelModal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div id="cancelModalTitle" class="modal-title"></div>
+      <div class="modal-warning">ถ้าคุณยกเลิก ระบบจะทำการยกเลิกออเดอร์ และรหัสรายการของคุณทันที</div>
+      <div class="modal-actions">
+        <button type="button" class="btn-outline" onclick="closeCancelModal()">ยกเลิก</button>
+        <button type="button" class="btn-cancel-order" onclick="confirmCancelOrder()">ยืนยัน</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCFycHVmpMs6F0eOuFssofoe6utBFVfhlM",
+      authDomain: "zircon-3c94d.firebaseapp.com",
+      projectId: "zircon-3c94d",
+      storageBucket: "zircon-3c94d.firebasestorage.app",
+      messagingSenderId: "638245118437",
+      appId: "1:638245118437:web:5d5243377649512ea1cf0c",
+      measurementId: "G-9Z0PH0CLB2"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const googleProvider = new firebase.auth.GoogleAuthProvider();
+    googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+    let currentUser = null;
+    let unsubscribeUserDoc = null;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const actionMode = urlParams.get('mode');
+    const actionOobCode = urlParams.get('oobCode');
+    let isPasswordResetMode = (actionMode === 'resetPassword' && Boolean(actionOobCode));
+
+    function setResetFeedback(text, isSuccess = false) {
+      const el = document.getElementById('resetMessageBox');
+      if (!text) {
+        el.textContent = '';
+        el.className = 'reset-msg';
+        return;
+      }
+      el.textContent = text;
+      el.className = `reset-msg ${isSuccess ? 'success' : 'error'}`;
+    }
+
+    async function initInlinePasswordReset() {
+      const resetSec = document.getElementById('resetPasswordSection');
+      const authSec = document.getElementById('authSection');
+      const appSec = document.getElementById('appSection');
+      const userArea = document.getElementById('userArea');
+      const navTabs = document.getElementById('navTabs');
+
+      resetSec.classList.remove('hidden');
+      authSec.classList.add('hidden');
+      appSec.classList.add('hidden');
+      userArea.classList.add('hidden');
+      navTabs.classList.add('hidden');
+
+      const descEl = document.getElementById('resetStatusDesc');
+      const emailBox = document.getElementById('resetAccountEmail');
+      const formEl = document.getElementById('resetPasswordForm');
+
+      try {
+        const email = await auth.verifyPasswordResetCode(actionOobCode);
+        descEl.textContent = 'กรอกรหัสผ่านใหม่ที่ต้องการใช้งาน';
+        emailBox.textContent = `บัญชี: ${email}`;
+        emailBox.style.display = 'block';
+        formEl.style.display = 'flex';
+        document.getElementById('resetNewPassword').focus();
+      } catch (error) {
+        descEl.textContent = 'ไม่สามารถใช้ลิงก์นี้ได้';
+        setResetFeedback('ลิงก์เปลี่ยนรหัสผ่านไม่ถูกต้อง หมดอายุ หรือถูกใช้งานไปแล้ว กรุณาขอใหม่อีกครั้ง');
+      }
+    }
+
+    async function handleConfirmResetPassword(event) {
+      event.preventDefault();
+      setResetFeedback('');
+
+      const newPassword = document.getElementById('resetNewPassword').value;
+      const confirmPassword = document.getElementById('resetConfirmPassword').value;
+      const btn = document.getElementById('btnSubmitResetPassword');
+
+      if (!/[A-Za-z]/.test(newPassword) || !/[0-9]/.test(newPassword) || newPassword.length < 8) {
+        setResetFeedback('รหัสผ่านต้องมีตัวอักษรภาษาอังกฤษอย่างน้อย 1 ตัว และตัวเลขอย่างน้อย 1 ตัว รวมอย่างน้อย 8 ตัว');
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        setResetFeedback('รหัสผ่านทั้งสองช่องไม่ตรงกัน');
+        return;
+      }
+
+      btn.disabled = true;
+      try {
+        await auth.confirmPasswordReset(actionOobCode, newPassword);
+        document.getElementById('resetPasswordForm').style.display = 'none';
+        document.getElementById('resetStatusDesc').textContent = 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว';
+        setResetFeedback('เปลี่ยนรหัสผ่านใหม่สำเร็จ สามารถกลับไปเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที', true);
+      } catch (error) {
+        const code = error && error.code;
+        if (code === 'auth/weak-password') {
+          setResetFeedback('รหัสผ่านไม่ปลอดภัยพอ กรุณาตั้งรหัสผ่านใหม่ที่คาดเดาได้ยากขึ้น');
+        } else if (code === 'auth/expired-action-code' || code === 'auth/invalid-action-code') {
+          setResetFeedback('ลิงก์นี้หมดอายุหรือถูกใช้งานไปแล้ว กรุณาขอลิงก์รีเซ็ตรหัสผ่านใหม่');
+        } else {
+          setResetFeedback('เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน กรุณาลองใหม่อีกครั้ง');
+        }
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function returnToMainApp(event) {
+      if (event) event.preventDefault();
+      isPasswordResetMode = false;
+      document.getElementById('resetPasswordSection').classList.add('hidden');
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+      renderAuthState();
+    }
+
+    function showAuthMessage(message, isError = true) {
+      const el = document.getElementById('authError');
+      if (!el) return;
+      el.textContent = message || '';
+      el.style.display = message ? 'block' : 'none';
+      el.classList.toggle('success-text', !isError && !!message);
+    }
+
+    function openForgotPasswordView() {
+      document.getElementById('authTabs').classList.add('hidden');
+      document.getElementById('loginFormContainer').classList.add('hidden');
+      document.getElementById('forgotPasswordBox').classList.remove('hidden');
+      showAuthMessage('');
+
+      const loginEmailVal = document.getElementById('loginEmail').value.trim();
+      const forgotInput = document.getElementById('forgotEmailInput');
+      if (loginEmailVal && !forgotInput.value.trim()) {
+        forgotInput.value = loginEmailVal;
+      }
+      forgotInput.focus();
+    }
+
+    function backToLoginView() {
+      document.getElementById('forgotPasswordBox').classList.add('hidden');
+      document.getElementById('loginFormContainer').classList.remove('hidden');
+      document.getElementById('authTabs').classList.remove('hidden');
+      showAuthMessage('');
+    }
+
+    function switchAuthTab(tab) {
+      const isLogin = tab === 'login';
+      document.getElementById('loginTab').classList.toggle('active', isLogin);
+      document.getElementById('registerTab').classList.toggle('active', !isLogin);
+      document.getElementById('loginPanel').classList.toggle('active', isLogin);
+      document.getElementById('registerPanel').classList.toggle('active', !isLogin);
+      if (!isLogin) {
+        backToLoginView();
+      }
+      showAuthMessage('');
+    }
+
+    function getFirebaseErrorMessage(error) {
+      const code = error && error.code;
+      const messages = {
+        'auth/email-already-in-use': 'อีเมลนี้ถูกใช้สมัครสมาชิกแล้ว',
+        'auth/invalid-email': 'รูปแบบอีเมลไม่ถูกต้อง',
+        'auth/missing-email': 'กรุณากรอกอีเมลเดียวกับที่ใช้สมัครสมาชิก',
+        'auth/weak-password': 'รหัสผ่านไม่ปลอดภัยพอ กรุณาใช้รหัสผ่านที่ยาวขึ้น',
+        'auth/user-not-found': 'ไม่พบบัญชีที่ใช้อีเมลนี้ กรุณาใช้อีเมลเดียวกับที่สมัครสมาชิก',
+        'auth/wrong-password': 'รหัสผ่านไม่ถูกต้อง',
+        'auth/invalid-credential': 'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
+        'auth/too-many-requests': 'พยายามหลายครั้งเกินไป กรุณารอสักครู่แล้วลองใหม่',
+        'auth/popup-closed-by-user': 'คุณปิดหน้าต่างเข้าสู่ระบบ Google ก่อนดำเนินการเสร็จ',
+        'auth/popup-blocked': 'เบราว์เซอร์บล็อกหน้าต่าง Google กรุณาอนุญาตป๊อปอัปแล้วลองใหม่',
+        'auth/unauthorized-domain': 'โดเมนเว็บไซต์นี้ยังไม่ได้รับอนุญาตใน Firebase Authentication'
+      };
+      return messages[code] || (error && error.message) || 'เกิดข้อผิดพลาด กรุณาลองใหม่';
+    }
+
+    async function sendResetPasswordEmail() {
+      showAuthMessage('');
+      const forgotInput = document.getElementById('forgotEmailInput');
+      const sendBtn = document.getElementById('btnSendResetEmail');
+      const email = (forgotInput.value || document.getElementById('loginEmail').value || '').trim();
+
+      if (!email) {
+        showAuthMessage('กรุณากรอกอีเมลเดียวกับที่ใช้สมัครสมาชิก');
+        forgotInput.focus();
+        return;
+      }
+
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(email)) {
+        showAuthMessage('รูปแบบอีเมลไม่ถูกต้อง กรุณากรอกอีเมลเดียวกับที่ใช้สมัครสมาชิก');
+        forgotInput.focus();
+        return;
+      }
+
+      sendBtn.disabled = true;
+      try {
+        await auth.sendPasswordResetEmail(email);
+        document.getElementById('loginEmail').value = email;
+        showAuthMessage(
+          `หากอีเมล ${email} เป็นบัญชีที่สมัครสมาชิกไว้ ระบบได้ส่งลิงก์รีเซ็ตรหัสผ่านไปแล้ว กรุณาตรวจสอบกล่องข้อความ (รวมถึงโฟลเดอร์จดหมายขยะ)`,
+          false
+        );
+      } catch (error) {
+        showAuthMessage(getFirebaseErrorMessage(error));
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    async function registerWithEmail(event) {
+      event.preventDefault();
+      showAuthMessage('');
+      const name = document.getElementById('registerName').value.trim();
+      const email = document.getElementById('registerEmail').value.trim();
+      const password = document.getElementById('registerPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      if (!name) return showAuthMessage('กรุณาตั้งชื่อบัญชี');
+      if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password) || password.length < 8) {
+        return showAuthMessage('รหัสผ่านต้องมีตัวอักษรภาษาอังกฤษและตัวเลข รวมอย่างน้อย 8 ตัว');
+      }
+      if (password !== confirmPassword) return showAuthMessage('รหัสผ่านทั้งสองช่องไม่ตรงกัน');
+
+      try {
+        const credential = await auth.createUserWithEmailAndPassword(email, password);
+        await credential.user.updateProfile({ displayName: name });
+        await credential.user.reload();
+        showAuthMessage('สมัครสมาชิกสำเร็จ', false);
+      } catch (error) {
+        showAuthMessage(getFirebaseErrorMessage(error));
+      }
+    }
+
+    async function loginWithEmail(event) {
+      event.preventDefault();
+      showAuthMessage('');
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      try {
+        await auth.signInWithEmailAndPassword(email, password);
+      } catch (error) {
+        showAuthMessage(getFirebaseErrorMessage(error));
+      }
+    }
+
+    async function handleGoogleButtonClick() {
+      showAuthMessage('');
+      try {
+        await auth.signInWithPopup(googleProvider);
+      } catch (error) {
+        if (error.code === 'auth/popup-blocked' || error.code === 'auth/operation-not-supported-in-this-environment') {
+          try {
+            await auth.signInWithRedirect(googleProvider);
+          } catch (redirectError) {
+            showAuthMessage(getFirebaseErrorMessage(redirectError));
+          }
+        } else {
+          showAuthMessage(getFirebaseErrorMessage(error));
+        }
+      }
+    }
+
+    async function logout() {
+      stopTickerLoop();
+      closeCancelModal();
+      if (unsubscribeUserDoc) {
+        unsubscribeUserDoc();
+        unsubscribeUserDoc = null;
+      }
+      try {
+        await auth.signOut();
+      } catch (error) {
+        showAuthMessage(getFirebaseErrorMessage(error));
+      }
+    }
+
+    function setOrderInputLocked(locked) {
+      const inputEl = document.getElementById('orderInput');
+      const btnEl = document.getElementById('btnConfirmOrder');
+      if (inputEl) inputEl.disabled = locked;
+      if (btnEl) btnEl.disabled = locked;
+    }
+
+    function syncTimerControlsUI() {
+      const toggleBtn = document.getElementById('btnToggleTimer');
+      const cancelBtn = document.getElementById('btnCancelOrder');
+      const hasActiveOrder = Boolean(activeOrder && remainingSeconds > 0);
+
+      if (!hasActiveOrder) {
+        toggleBtn.disabled = true;
+        toggleBtn.textContent = 'เริ่มนับเวลา';
+        cancelBtn.disabled = true;
+        return;
+      }
+
+      toggleBtn.disabled = false;
+      toggleBtn.textContent = isRunning ? 'หยุดนับเวลา' : 'เริ่มนับเวลา';
+      cancelBtn.disabled = false;
+    }
+
+    function resetUIForLoggedOutUser() {
+      activeOrder = null;
+      remainingSeconds = 0;
+      endAtTimestamp = null;
+      isRunning = false;
+      orderHistory = [];
+      document.getElementById('orderInput').value = '';
+      setOrderInputLocked(false);
+      document.getElementById('timerClock').textContent = '00:00:00';
+      document.getElementById('rentalBadge').textContent = 'รอดำเนินการ';
+      document.getElementById('timerStatusText').textContent = 'ยืนยันเลขออเดอร์เพื่อเตรียมเริ่มนับเวลา';
+      syncTimerControlsUI();
+      renderHistory();
+    }
+
+    function renderAuthState() {
+      if (isPasswordResetMode) {
+        initInlinePasswordReset();
+        return;
+      }
+
+      document.getElementById('resetPasswordSection').classList.add('hidden');
+      const authSec = document.getElementById('authSection');
+      const appSec = document.getElementById('appSection');
+      const userArea = document.getElementById('userArea');
+      const navTabs = document.getElementById('navTabs');
+
+      if (currentUser) {
+        authSec.classList.add('hidden');
+        appSec.classList.remove('hidden');
+        userArea.classList.remove('hidden');
+        navTabs.classList.remove('hidden');
+
+        document.getElementById('userName').textContent =
+          currentUser.displayName || currentUser.email || 'ผู้ใช้งาน';
+        document.getElementById('userAvatar').src =
+          currentUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent((currentUser.displayName || currentUser.email || 'Z').charAt(0))}&background=18181b&color=ffffff&size=64`;
+
+        subscribeToUserCloudData(currentUser.uid);
+      } else {
+        resetUIForLoggedOutUser();
+        backToLoginView();
+        authSec.classList.remove('hidden');
+        appSec.classList.add('hidden');
+        userArea.classList.add('hidden');
+        navTabs.classList.add('hidden');
+      }
+    }
+
+    auth.onAuthStateChanged((user) => {
+      currentUser = user;
+      renderAuthState();
+    });
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.nav-tab').forEach((btn, idx) => {
+        btn.classList.toggle('active', (tabName === 'rental' && idx === 0) || (tabName === 'history' && idx === 1));
+      });
+      document.getElementById('tab-rental').classList.toggle('hidden', tabName !== 'rental');
+      document.getElementById('tab-history').classList.toggle('hidden', tabName !== 'history');
+    }
+
+    const LETTER_DIGIT_MAP = {
+      A: '0',
+      B: '1',
+      C: '2',
+      D: '3',
+      E: '4',
+      F: '5',
+      G: '6',
+      H: '7',
+      I: '8',
+      J: '9',
+      L: '1'
+    };
+
+    let activeOrder = null;
+    let remainingSeconds = 0;
+    let endAtTimestamp = null;
+    let isRunning = false;
+    let timerInterval = null;
+    let orderHistory = [];
+
+    function getUserStorageKey(uid, suffix) {
+      return `zircon_${uid}_${suffix}`;
+    }
+
+    function readLocalUserCache(uid) {
+      if (!uid) return { history: [], timer: null };
+      try {
+        const history = JSON.parse(localStorage.getItem(getUserStorageKey(uid, 'history')) || '[]');
+        const timer = JSON.parse(localStorage.getItem(getUserStorageKey(uid, 'timer')) || 'null');
+        return {
+          history: Array.isArray(history) ? history : [],
+          timer
+        };
+      } catch (e) {
+        return { history: [], timer: null };
+      }
+    }
+
+    function writeLocalUserCache(uid, historyList, timerState) {
+      if (!uid) return;
+      localStorage.setItem(getUserStorageKey(uid, 'history'), JSON.stringify(historyList || []));
+      localStorage.setItem(getUserStorageKey(uid, 'timer'), JSON.stringify(timerState || null));
+    }
+
+    function decodeLetterDigits(letters) {
+      let digits = '';
+      for (const ch of letters.toUpperCase()) {
+        if (!Object.prototype.hasOwnProperty.call(LETTER_DIGIT_MAP, ch)) {
+          return null;
+        }
+        digits += LETTER_DIGIT_MAP[ch];
+      }
+      return digits;
+    }
+
+    function formatFullDuration(totalSeconds) {
+      const safe = Math.max(0, Math.round(Number(totalSeconds || 0)));
+      const hours = Math.floor(safe / 3600);
+      const mins = Math.floor((safe % 3600) / 60);
+      const secs = safe % 60;
+
+      const parts = [];
+      if (hours > 0) parts.push(`${hours} ชั่วโมง`);
+      if (mins > 0) parts.push(`${mins} นาที`);
+      if (secs > 0) parts.push(`${secs} วินาที`);
+      return parts.length > 0 ? parts.join(' ') : '0 วินาที';
+    }
+
+    function formatFullConfirmedDateTime(dateObj) {
+      const d = dateObj instanceof Date ? dateObj : new Date();
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const yearBE = d.getFullYear() + 543;
+      const hour = String(d.getHours()).padStart(2, '0');
+      const min = String(d.getMinutes()).padStart(2, '0');
+      return `${day}/${month}/${yearBE} ${hour}:${min}`;
+    }
+
+    function parseOrderString(raw) {
+      const cleaned = raw.trim().toUpperCase();
+      const regex = /^([A-Z])(\d+[A-Z]\d*)\.([A-Z]{2})-([A-Z]{2})(\d{2})\.(\d{2})$/;
+      const match = cleaned.match(regex);
+      if (!match) return null;
+
+      const [, rentCode, durationCode, monthLetters, hourLetters, minStr, dayStr] = match;
+
+      const durationMinutesDigits = durationCode.replace(/\D/g, '');
+      const durationMinutes = parseInt(durationMinutesDigits, 10);
+      if (!durationMinutes || durationMinutes <= 0) return null;
+
+      const monthDigits = decodeLetterDigits(monthLetters);
+      if (!monthDigits) return null;
+      const monthNum = parseInt(monthDigits, 10);
+      if (monthNum < 1 || monthNum > 12) return null;
+
+      const hourDigits = decodeLetterDigits(hourLetters);
+      if (!hourDigits) return null;
+      const hourNum = parseInt(hourDigits, 10);
+      const minNum = parseInt(minStr, 10);
+      if (hourNum > 23 || minNum > 59) return null;
+
+      const dayNum = parseInt(dayStr, 10);
+      if (dayNum < 1 || dayNum > 31) return null;
+
+      const totalSec = durationMinutes * 60;
+
+      return {
+        raw: cleaned,
+        rentCode,
+        month: monthDigits,
+        orderTime: `${hourDigits}:${minStr}`,
+        day: dayStr,
+        durationLabel: formatFullDuration(totalSec),
+        totalSeconds: totalSec
+      };
+    }
+
+    function isOrderAlreadyUsed(orderCode) {
+      const normalized = orderCode.trim().toUpperCase();
+      return orderHistory.some(item => String(item.raw || '').trim().toUpperCase() === normalized);
+    }
+
+    async function persistUserStateToCloud() {
+      if (!currentUser) return;
+      const timerPayload = {
+        activeOrder,
+        remainingSeconds,
+        endAtTimestamp,
+        isRunning
+      };
+      writeLocalUserCache(currentUser.uid, orderHistory, timerPayload);
+      try {
+        await db.collection('users').doc(currentUser.uid).set({
+          updatedAt: Date.now(),
+          history: orderHistory,
+          timer: timerPayload
+        }, { merge: true });
+      } catch (error) {
+        // คงค่าใน local cache ไว้หากอัปโหลดชั่วคราวไม่สำเร็จ
+      }
+    }
+
+    function applyUserDataState(data) {
+      const nextHistory = Array.isArray(data && data.history) ? data.history : [];
+      orderHistory = nextHistory;
+      renderHistory();
+
+      const saved = data && data.timer ? data.timer : null;
+      if (saved && saved.activeOrder) {
+        activeOrder = saved.activeOrder;
+        remainingSeconds = Number(saved.remainingSeconds || 0);
+        endAtTimestamp = saved.endAtTimestamp ? Number(saved.endAtTimestamp) : null;
+        isRunning = Boolean(saved.isRunning);
+
+        if (isRunning && endAtTimestamp) {
+          stopTickerLoop();
+          tickTimer(false);
+          if (isRunning) {
+            timerInterval = setInterval(() => tickTimer(true), 1000);
+          }
+        } else {
+          stopTickerLoop();
+          updateClockUI();
+          if (remainingSeconds > 0) {
+            document.getElementById('orderInput').value = activeOrder.raw || '';
+            setOrderInputLocked(true);
+            document.getElementById('rentalBadge').textContent = 'หยุดนับเวลา';
+            document.getElementById('timerStatusText').textContent = 'หยุดนับเวลา';
+            syncTimerControlsUI();
+          } else {
+            document.getElementById('orderInput').value = '';
+            setOrderInputLocked(false);
+            document.getElementById('rentalBadge').textContent = 'หมดเวลาเช่า';
+            document.getElementById('timerStatusText').textContent = 'หมดเวลาเช่า';
+            syncTimerControlsUI();
+          }
+        }
+      } else {
+        stopTickerLoop();
+        activeOrder = null;
+        remainingSeconds = 0;
+        endAtTimestamp = null;
+        isRunning = false;
+        setOrderInputLocked(false);
+        updateClockUI();
+        document.getElementById('rentalBadge').textContent = 'รอดำเนินการ';
+        document.getElementById('timerStatusText').textContent = 'ยืนยันเลขออเดอร์เพื่อเตรียมเริ่มนับเวลา';
+        syncTimerControlsUI();
+      }
+
+      if (currentUser) {
+        writeLocalUserCache(currentUser.uid, orderHistory, {
+          activeOrder,
+          remainingSeconds,
+          endAtTimestamp,
+          isRunning
+        });
+      }
+    }
+
+    function subscribeToUserCloudData(uid) {
+      if (unsubscribeUserDoc) {
+        unsubscribeUserDoc();
+        unsubscribeUserDoc = null;
+      }
+
+      const cached = readLocalUserCache(uid);
+      applyUserDataState(cached);
+
+      unsubscribeUserDoc = db.collection('users').doc(uid).onSnapshot(
+        (doc) => {
+          if (doc.exists) {
+            applyUserDataState(doc.data());
+          } else {
+            persistUserStateToCloud();
+          }
+        },
+        () => {
+          // ใช้ข้อมูลแคชในเครื่องหากเกิดข้อผิดพลาดในการเชื่อมต่อ
+        }
+      );
+    }
+
+    function parseAndConfirmOrder() {
+      const errEl = document.getElementById('orderError');
+
+      if (activeOrder && (remainingSeconds > 0 || isRunning)) {
+        errEl.textContent = 'กรุณารอให้เวลาของรายการปัจจุบันหมดก่อน จึงจะยืนยันออเดอร์ใหม่ได้';
+        errEl.style.display = 'block';
+        setOrderInputLocked(true);
+        return;
+      }
+
+      const inputVal = document.getElementById('orderInput').value;
+      const parsed = parseOrderString(inputVal);
+
+      if (!parsed) {
+        errEl.textContent = 'รูปแบบเลขออเดอร์ไม่ถูกต้อง';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      if (isOrderAlreadyUsed(parsed.raw)) {
+        errEl.textContent = 'เลขออเดอร์นี้ถูกใช้งานไปแล้ว ไม่สามารถใช้ซ้ำได้';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      errEl.style.display = 'none';
+      stopTickerLoop();
+
+      activeOrder = parsed;
+      remainingSeconds = parsed.totalSeconds;
+      endAtTimestamp = null;
+      isRunning = false;
+
+      document.getElementById('orderInput').value = parsed.raw;
+      setOrderInputLocked(true);
+
+      document.getElementById('rentalBadge').textContent = 'พร้อมใช้งาน';
+      document.getElementById('timerStatusText').textContent = 'พร้อมเริ่มนับเวลา';
+      updateClockUI();
+      syncTimerControlsUI();
+
+      orderHistory.unshift({
+        raw: parsed.raw,
+        rentCode: parsed.rentCode,
+        totalSeconds: parsed.totalSeconds,
+        durationLabel: parsed.durationLabel,
+        confirmedAt: formatFullConfirmedDateTime(new Date()),
+        status: 'active'
+      });
+      renderHistory();
+      persistUserStateToCloud();
+    }
+
+    function formatSeconds(sec) {
+      const safe = Math.max(0, Math.floor(sec));
+      const h = Math.floor(safe / 3600);
+      const m = Math.floor((safe % 3600) / 60);
+      const s = safe % 60;
+      return [h, m, s].map(v => String(v).padStart(2, '0')).join(':');
+    }
+
+    function updateClockUI() {
+      document.getElementById('timerClock').textContent = formatSeconds(remainingSeconds);
+    }
+
+    function stopTickerLoop() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+    function tickTimer(shouldSyncCloud = false) {
+      if (!isRunning || !endAtTimestamp) return;
+
+      const diffSec = Math.ceil((endAtTimestamp - Date.now()) / 1000);
+      if (diffSec > 0) {
+        remainingSeconds = diffSec;
+        updateClockUI();
+        if (activeOrder && document.getElementById('orderInput').value !== activeOrder.raw) {
+          document.getElementById('orderInput').value = activeOrder.raw;
+        }
+        setOrderInputLocked(true);
+        document.getElementById('rentalBadge').textContent = 'กำลังนับเวลา';
+        document.getElementById('timerStatusText').textContent = 'กำลังนับเวลาถอยหลัง';
+        syncTimerControlsUI();
+        if (currentUser) {
+          writeLocalUserCache(currentUser.uid, orderHistory, {
+            activeOrder,
+            remainingSeconds,
+            endAtTimestamp,
+            isRunning
+          });
+        }
+      } else {
+        remainingSeconds = 0;
+        isRunning = false;
+        endAtTimestamp = null;
+        stopTickerLoop();
+        updateClockUI();
+        document.getElementById('orderInput').value = '';
+        setOrderInputLocked(false);
+        document.getElementById('rentalBadge').textContent = 'หมดเวลาเช่า';
+        document.getElementById('timerStatusText').textContent = 'หมดเวลาเช่า';
+        syncTimerControlsUI();
+        if (shouldSyncCloud) {
+          persistUserStateToCloud();
+        }
+      }
+    }
+
+    function startRentalTimer() {
+      if (!activeOrder || remainingSeconds <= 0) return;
+
+      isRunning = true;
+      endAtTimestamp = Date.now() + remainingSeconds * 1000;
+
+      setOrderInputLocked(true);
+      document.getElementById('rentalBadge').textContent = 'กำลังนับเวลา';
+      document.getElementById('timerStatusText').textContent = 'กำลังนับเวลาถอยหลัง';
+      syncTimerControlsUI();
+
+      stopTickerLoop();
+      tickTimer(false);
+      persistUserStateToCloud();
+      timerInterval = setInterval(() => tickTimer(true), 1000);
+    }
+
+    function pauseRentalTimer() {
+      if (isRunning && endAtTimestamp) {
+        remainingSeconds = Math.max(0, Math.ceil((endAtTimestamp - Date.now()) / 1000));
+      }
+      isRunning = false;
+      endAtTimestamp = null;
+      stopTickerLoop();
+      updateClockUI();
+
+      if (activeOrder && remainingSeconds > 0) {
+        setOrderInputLocked(true);
+        document.getElementById('rentalBadge').textContent = 'หยุดนับเวลา';
+        document.getElementById('timerStatusText').textContent = 'หยุดนับเวลา';
+      } else {
+        setOrderInputLocked(false);
+      }
+      syncTimerControlsUI();
+      persistUserStateToCloud();
+    }
+
+    function toggleRentalTimer() {
+      if (isRunning) {
+        pauseRentalTimer();
+      } else {
+        startRentalTimer();
+      }
+    }
+
+    function openCancelModal() {
+      if (!activeOrder || remainingSeconds <= 0) return;
+      document.getElementById('cancelModalTitle').textContent =
+        `คุณต้องการยกเลิกรายการ ${activeOrder.raw} หรือไม่`;
+      document.getElementById('cancelModal').classList.remove('hidden');
+    }
+
+    function closeCancelModal() {
+      document.getElementById('cancelModal').classList.add('hidden');
+    }
+
+    function confirmCancelOrder() {
+      if (!activeOrder) {
+        closeCancelModal();
+        return;
+      }
+
+      const targetOrderRaw = String(activeOrder.raw || '').trim().toUpperCase();
+      orderHistory = orderHistory.map(item => {
+        if (String(item.raw || '').trim().toUpperCase() === targetOrderRaw && item.status !== 'cancelled') {
+          return {
+            ...item,
+            status: 'cancelled'
+          };
+        }
+        return item;
+      });
+
+      stopTickerLoop();
+      activeOrder = null;
+      remainingSeconds = 0;
+      endAtTimestamp = null;
+      isRunning = false;
+
+      document.getElementById('orderInput').value = '';
+      document.getElementById('orderError').style.display = 'none';
+      setOrderInputLocked(false);
+      updateClockUI();
+      document.getElementById('rentalBadge').textContent = 'ยกเลิกรายการแล้ว';
+      document.getElementById('timerStatusText').textContent = 'ยกเลิกรายการเรียบร้อยแล้ว สามารถกรอกออเดอร์ใหม่ได้';
+      syncTimerControlsUI();
+
+      closeCancelModal();
+      renderHistory();
+      persistUserStateToCloud();
+    }
+
+    function getHistoryDurationText(item) {
+      if (typeof item.totalSeconds === 'number' && item.totalSeconds > 0) {
+        return formatFullDuration(item.totalSeconds);
+      }
+      if (item.raw) {
+        const reparsed = parseOrderString(item.raw);
+        if (reparsed) return reparsed.durationLabel;
+      }
+      return item.durationLabel || '-';
+    }
+
+    function renderHistory() {
+      const tbody = document.getElementById('historyTableBody');
+      document.getElementById('historyCount').textContent = `${orderHistory.length} รายการ`;
+      if (!orderHistory.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align:center; color:var(--text-muted); padding:24px 0;">ยังไม่มีรายการ</td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = orderHistory.map(item => {
+        const isCancelled = item.status === 'cancelled';
+        const noteHtml = isCancelled
+          ? `<span class="note-cancelled">ถูกยกเลิก</span>`
+          : `<span class="note-normal">-</span>`;
+
+        return `
+          <tr>
+            <td class="mono">${item.raw || '-'}</td>
+            <td class="mono">${item.rentCode || '-'}</td>
+            <td>${getHistoryDurationText(item)}</td>
+            <td class="mono">${item.confirmedAt || '-'}</td>
+            <td>${noteHtml}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    renderAuthState();
+  </script>
+</body>
+</html>
